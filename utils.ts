@@ -1,35 +1,15 @@
 import { DailyData, WeeklySummary, BacktestResult, PositionState } from './types';
 
-export const parseCSV = (csv: string): DailyData[] => {
-  const lines = csv.split(/\r?\n/).filter(line => line.trim() !== '');
-  const data: DailyData[] = [];
-  
-  // Skip header (index 0)
-  for (let i = 1; i < lines.length; i++) {
-    const parts = lines[i].split(',');
-    if (parts.length >= 2) {
-      const date = parts[0].trim();
-      const price = parseFloat(parts[1].trim());
-      
-      if (!isNaN(price) && date) {
-        data.push({
-          date,
-          price,
-          originalIndex: 0, // Will set after sort
-          changePct: null
-        });
-      }
-    }
-  }
-
+// New helper to process raw date/price pairs into full DailyData with metrics
+export const processRawData = (rawData: {date: string, price: number}[]): DailyData[] => {
   // Ensure sorted by date ascending using string comparison (ISO Safe for YYYY-MM-DD)
-  data.sort((a, b) => a.date.localeCompare(b.date));
+  const sorted = [...rawData].sort((a, b) => a.date.localeCompare(b.date));
   
   // Calculate daily change percentage and assign index
-  return data.map((d, index) => {
+  return sorted.map((d, index) => {
     let changePct: number | null = null;
     if (index > 0) {
-      const prevPrice = data[index - 1].price;
+      const prevPrice = sorted[index - 1].price;
       changePct = ((d.price - prevPrice) / prevPrice) * 100;
     }
 
@@ -39,6 +19,26 @@ export const parseCSV = (csv: string): DailyData[] => {
       changePct
     };
   });
+};
+
+export const parseCSV = (csv: string): DailyData[] => {
+  const lines = csv.split(/\r?\n/).filter(line => line.trim() !== '');
+  const rawData: {date: string, price: number}[] = [];
+  
+  // Skip header (index 0)
+  for (let i = 1; i < lines.length; i++) {
+    const parts = lines[i].split(',');
+    if (parts.length >= 2) {
+      const date = parts[0].trim();
+      const price = parseFloat(parts[1].trim());
+      
+      if (!isNaN(price) && date) {
+        rawData.push({ date, price });
+      }
+    }
+  }
+
+  return processRawData(rawData);
 };
 
 const getFridayOfWeek = (dateStr: string): string => {
