@@ -1,0 +1,5 @@
+{
+  "name": "Weekly Stock Performance Analyzer",
+  "description": "An analytical tool that processes daily stock data to calculate weekly performance metrics, comparing closing prices against previous days and previous weeks.",
+  "requestFramePermissions": []
+}
