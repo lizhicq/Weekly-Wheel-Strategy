@@ -128,11 +128,13 @@ export const calculateWeeklyMetrics = (dailyData: DailyData[]): WeeklySummary[] 
 
 const INITIAL_CAPITAL = 10000;
 const CALL_STRIKE_PCT = 1.05; // +5%
-const CALL_PREMIUM_PCT = 0.01; // 1%
 const PUT_STRIKE_PCT = 1.0; // ATM
-const PUT_PREMIUM_PCT = 0.05; // 5% (Updated as requested)
 
-export const runWheelStrategy = (weeklyData: WeeklySummary[]): BacktestResult[] => {
+export const runWheelStrategy = (
+  weeklyData: WeeklySummary[], 
+  callPremiumPct: number = 0.01, 
+  putPremiumPct: number = 0.05
+): BacktestResult[] => {
   // Ensure chronological order (Oldest -> Newest) for simulation
   const sortedWeeks = [...weeklyData].reverse();
   
@@ -170,7 +172,7 @@ export const runWheelStrategy = (weeklyData: WeeklySummary[]): BacktestResult[] 
     if (state === 'HOLDING_STOCK') {
       // Strategy: Sell Covered Call
       strike = currentPrice * CALL_STRIKE_PCT;
-      premium = currentPrice * CALL_PREMIUM_PCT * currentShares; // Total premium cash
+      premium = currentPrice * callPremiumPct * currentShares; // Total premium cash based on param
       
       // Receive Premium immediately
       currentCash += premium;
@@ -202,7 +204,7 @@ export const runWheelStrategy = (weeklyData: WeeklySummary[]): BacktestResult[] 
       
       // How many contracts/shares can we secure?
       const notionalShares = currentCash / strike;
-      premium = currentPrice * PUT_PREMIUM_PCT * notionalShares;
+      premium = currentPrice * putPremiumPct * notionalShares; // Based on param
       
       // Receive Premium
       currentCash += premium;
